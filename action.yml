@@ -1,5 +1,5 @@
-name: "Jira Issue Key Checker"
-description: "Checks If a PR contains its linked Jira issue key in both the title and the description."
+name: "DHIS2 Jira Automation"
+description: "Enforces DHIS2 GitHub-Jira linking rules and adds convenient PR comments"
 inputs:
   GITHUB_TOKEN:
     required: true
