@@ -44,6 +44,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
 const COMMENT_HEADER = "## Linked JIRA issues";
+const COMMENT_FOOTER = "- [ ] Check to refresh";
 const event = github.context.payload;
 function createOrUpdateComment(commentBody) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -57,6 +58,7 @@ function createOrUpdateComment(commentBody) {
         const existingComment = comments.data.find((comment) => { var _a; return (_a = comment.body) === null || _a === void 0 ? void 0 : _a.startsWith(COMMENT_HEADER); });
         const body = `${COMMENT_HEADER}
 ${commentBody}
+${COMMENT_FOOTER}
 `;
         if (existingComment) {
             yield octokit.rest.issues.updateComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, comment_id: existingComment.id, body: body }));
