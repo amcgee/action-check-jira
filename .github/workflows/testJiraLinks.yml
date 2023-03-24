@@ -13,3 +13,5 @@ jobs:
     - uses: actions/checkout@v2
     - name: Link DHIS2 Jira issues
       uses: ./
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
