@@ -1,4 +1,3 @@
-
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 
@@ -10,7 +9,7 @@ import type { JiraIssue } from "./jiraTypes";
 
 const rcbBranchPrefix = "patch/";
 const event = github.context.payload as PullRequestEvent;
-const escapeHatch = '[NO JIRA]'
+const escapeHatch = "[NO JIRA]";
 
 function isIssueApproved(issue: JiraIssue, targetVersion: string): boolean {
   const rcbApprovalLabel = `APPROVED-${targetVersion}`;
@@ -24,25 +23,34 @@ Some hints:
 - Use the format \`[DHIS2-12345]\`
 - Multiple issues can be specified, i.e. \`[DHIS2-12345] [LIBS-24680]\`
 - In the **very rare case** where no Jira issue can be associated with this PR, use \`${escapeHatch}\`
-`
+`;
 
 const noJiraComment = `
 ❓ **${escapeHatch}** Are you sure this PR shouldn't be linked to a Jira issue?
-`
+`;
 
-function generateSuccessComment(issues: JiraIssue[], missingApprovals: string[], invalidIssuesText: string) {
-  return `
+function generateSuccessComment(
+  issues: JiraIssue[],
+  requiresRCBApproval: boolean,
+  missingApprovals: string[],
+  invalidIssuesText: string
+) {
+  return `${issues
+  .map(
+    (issue) => `
+- [${issue.key}](${createJiraLink(issue.key)}) - ${issue.fields.summary}`
+  )
+  .join("\n")}
+${invalidIssuesText}
+
 ${
   missingApprovals.length
-    ? `### 🛑 **RELEASE CONTROL BOARD APPROVAL REQUIRED** 👮`
+    ? `### 🛑 RELEASE CONTROL BOARD APPROVAL REQUIRED 👮`
+    : requiresRCBApproval
+    ? `### ✅ Approved by the Release Control Board 🚀`
     : ""
 }
-${issues.map(
-  (issue) => `
-- [${issue.key}](${createJiraLink(issue.key)}) - ${issue.fields.summary}`
-).join('\n')}
-${invalidIssuesText}
-`
+`;
 }
 
 async function run() {
@@ -60,11 +68,11 @@ async function run() {
     );
     if (!issueKeys.length) {
       if (prTitle.indexOf(escapeHatch) !== -1) {
-        createOrUpdateComment(noJiraComment)
-        core.info(`Found escape hatch ${escapeHatch}`)
-        return
+        createOrUpdateComment(noJiraComment);
+        core.info(`Found escape hatch ${escapeHatch}`);
+        return;
       }
-      createOrUpdateComment(missingIssueKeyComment)
+      createOrUpdateComment(missingIssueKeyComment);
       core.setFailed("Jira Issue Key missing in PR title.");
       return;
     }
@@ -78,29 +86,40 @@ async function run() {
       if (issue) {
         issues.push(issue);
 
-      if (requiresRCBApproval) {
-        const targetVersion = event.pull_request.base.ref.substring(
-          rcbBranchPrefix.length
-        );
-        if (!isIssueApproved(issue, targetVersion)) {
-          missingApprovals.push(key);
+        if (requiresRCBApproval) {
+          const targetVersion = event.pull_request.base.ref.substring(
+            rcbBranchPrefix.length
+          );
+          if (!isIssueApproved(issue, targetVersion)) {
+            missingApprovals.push(key);
+          }
         }
-      }
       } else {
-        invalidIssues.push(key)
+        invalidIssues.push(key);
       }
     }
 
-    const invalidIssuesText = invalidIssues.map(key => `- ❓ Issue key \`${key}\` appears to be invalid`).join('\n')
+    const invalidIssuesText = invalidIssues
+      .map((key) => `- ❓ Issue key \`${key}\` appears to be invalid`)
+      .join("\n");
     if (invalidIssues.length) {
       if (!issues.length) {
-        createOrUpdateComment(`${missingIssueKeyComment}\n\n${invalidIssuesText}`);
+        createOrUpdateComment(
+          `${missingIssueKeyComment}\n\n${invalidIssuesText}`
+        );
         core.setFailed("No valid Jira issue keys found in PR title.");
-        return
+        return;
       }
     }
 
-    createOrUpdateComment(generateSuccessComment(issues, missingApprovals, invalidIssuesText));
+    createOrUpdateComment(
+      generateSuccessComment(
+        issues,
+        requiresRCBApproval,
+        missingApprovals,
+        invalidIssuesText
+      )
+    );
 
     if (missingApprovals.length === 1) {
       core.setFailed(
@@ -116,7 +135,9 @@ async function run() {
       return;
     }
   } catch (error: any) {
-    createOrUpdateComment('❌ An unknown error occured, check the Github Action logs')
+    createOrUpdateComment(
+      "❌ An unknown error occured, check the Github Action logs"
+    );
     core.error(error);
     core.setFailed("Failed to link Jira issues");
   }

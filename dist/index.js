@@ -115,7 +115,7 @@ const github_1 = __nccwpck_require__(5928);
 const jira_1 = __nccwpck_require__(4438);
 const rcbBranchPrefix = "patch/";
 const event = github.context.payload;
-const escapeHatch = '[NO JIRA]';
+const escapeHatch = "[NO JIRA]";
 function isIssueApproved(issue, targetVersion) {
     const rcbApprovalLabel = `APPROVED-${targetVersion}`;
     return issue.fields.labels.includes(rcbApprovalLabel);
@@ -131,14 +131,18 @@ Some hints:
 const noJiraComment = `
 ❓ **${escapeHatch}** Are you sure this PR shouldn't be linked to a Jira issue?
 `;
-function generateSuccessComment(issues, missingApprovals, invalidIssuesText) {
-    return `
-${missingApprovals.length
-        ? `### 🛑 **RELEASE CONTROL BOARD APPROVAL REQUIRED** 👮`
-        : ""}
-${issues.map((issue) => `
-- [${issue.key}](${(0, jira_1.createJiraLink)(issue.key)}) - ${issue.fields.summary}`).join('\n')}
+function generateSuccessComment(issues, requiresRCBApproval, missingApprovals, invalidIssuesText) {
+    return `${issues
+        .map((issue) => `
+- [${issue.key}](${(0, jira_1.createJiraLink)(issue.key)}) - ${issue.fields.summary}`)
+        .join("\n")}
 ${invalidIssuesText}
+
+${missingApprovals.length
+        ? `### 🛑 RELEASE CONTROL BOARD APPROVAL REQUIRED 👮`
+        : requiresRCBApproval
+            ? `### ✅ Approved by the Release Control Board 🚀`
+            : ""}
 `;
 }
 function run() {
@@ -178,7 +182,9 @@ function run() {
                     invalidIssues.push(key);
                 }
             }
-            const invalidIssuesText = invalidIssues.map(key => `- ❓ Issue key \`${key}\` appears to be invalid`).join('\n');
+            const invalidIssuesText = invalidIssues
+                .map((key) => `- ❓ Issue key \`${key}\` appears to be invalid`)
+                .join("\n");
             if (invalidIssues.length) {
                 if (!issues.length) {
                     (0, github_1.createOrUpdateComment)(`${missingIssueKeyComment}\n\n${invalidIssuesText}`);
@@ -186,7 +192,7 @@ function run() {
                     return;
                 }
             }
-            (0, github_1.createOrUpdateComment)(generateSuccessComment(issues, missingApprovals, invalidIssuesText));
+            (0, github_1.createOrUpdateComment)(generateSuccessComment(issues, requiresRCBApproval, missingApprovals, invalidIssuesText));
             if (missingApprovals.length === 1) {
                 core.setFailed(`Issue ${missingApprovals[0]} has not been approved by the Release Control Board`);
                 return;
@@ -197,7 +203,7 @@ function run() {
             }
         }
         catch (error) {
-            (0, github_1.createOrUpdateComment)('❌ An unknown error occured, check the Github Action logs');
+            (0, github_1.createOrUpdateComment)("❌ An unknown error occured, check the Github Action logs");
             core.error(error);
             core.setFailed("Failed to link Jira issues");
         }
