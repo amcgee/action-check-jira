@@ -5,5 +5,5 @@ inputs:
     required: true
     description: "The GitHub token to use for posting comments"
 runs:
-  using: "node12"
-  main: "index.js"
+  using: "node16"
+  main: "dist/index.js"
