@@ -26,6 +26,7 @@ async function createOrUpdateComment(
     repo: github.context.repo.repo,
     pull_number: event.pull_request.number,
   });
+  core.info(comments.data.toString())
   const existingComment = comments.data.find((comment) =>
     comment.body.startsWith(COMMENT_HEADER)
   );
