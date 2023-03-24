@@ -55,12 +55,15 @@ function createOrUpdateComment(commentBody) {
         });
         core.info(comments.data.toString());
         const existingComment = comments.data.find((comment) => { var _a; return (_a = comment.body) === null || _a === void 0 ? void 0 : _a.startsWith(COMMENT_HEADER); });
+        const body = `
+${COMMENT_HEADER}
+${commentBody}
+`;
         if (existingComment) {
-            yield octokit.rest.issues.updateComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, comment_id: existingComment.id, body: commentBody }));
+            yield octokit.rest.issues.updateComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, comment_id: existingComment.id, body: body }));
         }
         else {
-            yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, body: `${COMMENT_HEADER}
-${commentBody}` }));
+            yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, body: body }));
         }
     });
 }

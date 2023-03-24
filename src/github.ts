@@ -18,20 +18,22 @@ export async function createOrUpdateComment(commentBody: string) {
   const existingComment = comments.data.find((comment) =>
     comment.body?.startsWith(COMMENT_HEADER)
   );
-
+  const body = `
+${COMMENT_HEADER}
+${commentBody}
+`
   if (existingComment) {
     await octokit.rest.issues.updateComment({
       ...github.context.repo,
       issue_number: event.pull_request.number,
       comment_id: existingComment.id,
-      body: commentBody,
+      body: body,
     });
   } else {
     await octokit.rest.issues.createComment({
       ...github.context.repo,
       issue_number: event.pull_request.number,
-      body: `${COMMENT_HEADER}
-${commentBody}`,
+      body: body,
     });
   }
 }
