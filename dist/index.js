@@ -80,7 +80,7 @@ function run() {
             const prBody = event.pull_request.body;
             const requiresRCBApproval = event.pull_request.base.ref.startsWith(rcbBranchPrefix);
             const projectKeys = yield (0, jira_1.getProjectKeys)();
-            let regex = new RegExp(`\[((?:${projectKeys.join('|')})-[0-9]+)\]`);
+            let regex = new RegExp(`\[((${projectKeys.join('|')})-[0-9]+)\]`);
             const issueKeys = Array.from(prTitle.matchAll(regex), m => m[1]);
             if (!issueKeys.length) {
                 core.setFailed("Jira Issue Key missing in PR title.");
