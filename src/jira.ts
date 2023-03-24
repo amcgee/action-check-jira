@@ -5,9 +5,10 @@ import {
   JiraAPIPaginatedResponse,
   JiraIssue,
   JiraProject,
-} from "./jiraApiTypes";
+} from "./jiraTypes";
 
-const jiraApi = "https://dhis2.atlassian.net/rest/api/3";
+const jiraBase = "https://dhis2.atlassian.net"
+const jiraApi = `${jiraBase}/rest/api/3`;
 
 async function fetchJira(path: String) {
   try {
@@ -30,6 +31,10 @@ export async function getProjectKeys() {
   return projects.values.map((project) => project.key);
 }
 export async function getJiraIssue(key: string): Promise<JiraIssue> {
-  const issue = <JiraIssue>await fetchJira(`/issue/${key}?fields=labels`);
+  const issue = <JiraIssue>await fetchJira(`/issue/${key}?fields=labels,summary`);
   return issue;
+}
+
+export function createJiraLink(key: string): string {
+  return `${jiraBase}/browse/${key}`
 }

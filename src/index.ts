@@ -2,9 +2,9 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 
 import { PullRequestEvent } from "@octokit/webhooks-definitions/schema";
-import { getJiraIssue, getProjectKeys } from "./jira";
+import { getJiraIssue, getProjectKeys, createJiraLink } from "./jira";
 
-import type { JiraIssue } from './jiraApiTypes'
+import type { JiraIssue } from './jiraTypes'
 
 const rcbBranchPrefix = "patch/";
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
@@ -33,7 +33,7 @@ async function createOrUpdateComment(
   const commentBody = `${COMMENT_HEADER}
 ${issues.map(
   (issue) => `
-- [${issue.key}](${issue.self}) - ${issue.fields.summary}`
+- [${issue.key}](${createJiraLink(issue.key)}) - ${issue.fields.summary}`
 )}
 ${
   missingApprovals.length

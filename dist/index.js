@@ -61,7 +61,7 @@ function createOrUpdateComment(issues, missingApprovals) {
         const existingComment = comments.data.find((comment) => comment.body.startsWith(COMMENT_HEADER));
         const commentBody = `${COMMENT_HEADER}
 ${issues.map((issue) => `
-- [${issue.key}](${issue.self}) - ${issue.fields.summary}`)}
+- [${issue.key}](${(0, jira_1.createJiraLink)(issue.key)}) - ${issue.fields.summary}`)}
 ${missingApprovals.length
             ? `
 ---
@@ -161,10 +161,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getJiraIssue = exports.getProjectKeys = void 0;
+exports.createJiraLink = exports.getJiraIssue = exports.getProjectKeys = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const node_fetch_1 = __importDefault(__nccwpck_require__(4429));
-const jiraApi = "https://dhis2.atlassian.net/rest/api/3";
+const jiraBase = "https://dhis2.atlassian.net";
+const jiraApi = `${jiraBase}/rest/api/3`;
 function fetchJira(path) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -190,11 +191,15 @@ function getProjectKeys() {
 exports.getProjectKeys = getProjectKeys;
 function getJiraIssue(key) {
     return __awaiter(this, void 0, void 0, function* () {
-        const issue = yield fetchJira(`/issue/${key}?fields=labels`);
+        const issue = yield fetchJira(`/issue/${key}?fields=labels,summary`);
         return issue;
     });
 }
 exports.getJiraIssue = getJiraIssue;
+function createJiraLink(key) {
+    return `${jiraBase}/browse/${key}`;
+}
+exports.createJiraLink = createJiraLink;
 
 
 /***/ }),
