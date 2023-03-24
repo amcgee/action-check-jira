@@ -1,7 +1,7 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 2932:
+/***/ 4822:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -45,11 +45,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const node_fetch_1 = __importDefault(__nccwpck_require__(4429));
-const jiraApi = 'https://dhis2.atlassian.net/rest/api/3';
-const rcbBranchPrefix = 'patch/';
-const GITHUB_TOKEN = core.getInput('GITHUB_TOKEN');
+const jiraApi = "https://dhis2.atlassian.net/rest/api/3";
+const rcbBranchPrefix = "patch/";
+const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
 const event = github.context.payload;
-const COMMENT_HEADER = '### DHIS2 Jira Links';
+const COMMENT_HEADER = "### DHIS2 Jira Links";
 function fetchJira(path) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -64,9 +64,9 @@ function fetchJira(path) {
 }
 function getProjectKeysRegex() {
     return __awaiter(this, void 0, void 0, function* () {
-        const projects = yield fetchJira('/project/search?status=live');
-        const projectKeys = projects.map(project => project.key);
-        return `(${projectKeys.join('|')})`;
+        const projects = (yield fetchJira("/project/search?status=live"));
+        const projectKeys = projects.map((project) => project.key);
+        return `(${projectKeys.join("|")})`;
     });
 }
 function getJiraIssues(key) {
@@ -85,15 +85,17 @@ function createOrUpdateComment(issues, missingApprovals) {
         const comments = yield octokit.rest.pulls.listReviewComments({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
-            pull_number: event.pull_request.number
+            pull_number: event.pull_request.number,
         });
-        const existingComment = comments.data.find(comment => comment.body.startsWith(COMMENT_HEADER));
+        const existingComment = comments.data.find((comment) => comment.body.startsWith(COMMENT_HEADER));
         const commentBody = `${COMMENT_HEADER}
-${issues.map(issue => `
+${issues.map((issue) => `
 - [${issue.key}](${issue.self}) - ${issue.fields.summary}`)}
-${missingApprovals.length ? `
+${missingApprovals.length
+            ? `
 ---
-**RELEASE CONTROL BOARD APPROVAL REQUIRED**` : ''}`;
+**RELEASE CONTROL BOARD APPROVAL REQUIRED**`
+            : ""}`;
         if (existingComment) {
             yield octokit.rest.issues.updateComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, comment_id: existingComment.id, body: commentBody }));
         }
@@ -132,7 +134,7 @@ function run() {
                 return;
             }
             else if (missingApprovals.length) {
-                core.setFailed(`Issue ${missingApprovals.join(', ')} has not been approved by the Release Control Board`);
+                core.setFailed(`Issue ${missingApprovals.join(", ")} has not been approved by the Release Control Board`);
                 return;
             }
         }
@@ -17051,7 +17053,7 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(2932);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(4822);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()

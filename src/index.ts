@@ -33,8 +33,12 @@ interface JiraIssue {
 
 async function fetchJira(path: String) {
   try {
-    const response = await fetch(`${jiraApi}${path}`);
+    const uri = `${jiraApi}${path}`
+    core.info(`Fetching ${uri}`)
+    const response = await fetch(uri);
+    core.info(`[${response.status}] ${response.statusText}`)
     const json = await response.json();
+    core.info(`response: ${JSON.stringify(json, undefined, 2)}`)
     return json;
   } catch (e) {
     throw new Error(`Failed to fetch ${path} from Jira: ${e}`);
@@ -148,7 +152,10 @@ async function run() {
       return;
     }
   } catch (error: any) {
-    core.info(error);
+    core.error(error);
+    core.setFailed(
+      'Failed to link Jira issues'
+    )
   }
 }
 
