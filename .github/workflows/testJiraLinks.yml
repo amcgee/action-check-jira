@@ -1,7 +1,13 @@
-name: use my action
-on: pull_request
+name: Link DHIS2 Jira issues
+on:
+  pull_request:
+    types: 
+    - opened
+    - reopened
+    - edited
+    - synchronize
 jobs:
-  test_action:
+  check:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
