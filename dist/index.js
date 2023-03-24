@@ -38,47 +38,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
-const node_fetch_1 = __importDefault(__nccwpck_require__(4429));
-const jiraApi = "https://dhis2.atlassian.net/rest/api/3";
+const jira_1 = __nccwpck_require__(4438);
 const rcbBranchPrefix = "patch/";
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
 const event = github.context.payload;
 const COMMENT_HEADER = "### DHIS2 Jira Links";
-function fetchJira(path) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const uri = `${jiraApi}${path}`;
-            core.info(`Fetching ${uri}`);
-            const response = yield (0, node_fetch_1.default)(uri);
-            core.info(`[${response.status}] ${response.statusText}`);
-            const json = yield response.json();
-            core.info(`response: ${JSON.stringify(json, undefined, 2)}`);
-            return json;
-        }
-        catch (e) {
-            throw new Error(`Failed to fetch ${path} from Jira: ${e}`);
-        }
-    });
-}
-function getProjectKeysRegex() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const projects = (yield fetchJira("/project/search?status=live"));
-        const projectKeys = projects.values.map((project) => project.key);
-        return `(${projectKeys.join("|")})`;
-    });
-}
-function getJiraIssues(key) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const issue = yield fetchJira(`/issue/${key}?fields=labels`);
-        return issue;
-    });
-}
 function isIssueApproved(issue, targetVersion) {
     const rcbApprovalLabel = `APPROVED-${targetVersion}`;
     return issue.fields.labels.includes(rcbApprovalLabel);
@@ -112,10 +79,10 @@ function run() {
             const prTitle = event.pull_request.title;
             const prBody = event.pull_request.body;
             const requiresRCBApproval = event.pull_request.base.ref.startsWith(rcbBranchPrefix);
-            const projectKeysRegex = yield getProjectKeysRegex();
-            let regex = new RegExp(`[${projectKeysRegex}-[0-9]+]`);
-            const issueKeys = regex.exec(prTitle);
-            if (!(issueKeys === null || issueKeys === void 0 ? void 0 : issueKeys.length)) {
+            const projectKeys = yield (0, jira_1.getProjectKeys)();
+            let regex = new RegExp(`[((?:${projectKeys.join('|')})-[0-9]+)]`);
+            const issueKeys = Array.from(prTitle.matchAll(regex), m => m[1]);
+            if (!issueKeys.length) {
                 core.setFailed("Jira Issue Key missing in PR title.");
                 return;
             }
@@ -123,7 +90,7 @@ function run() {
             let missingApprovals = [];
             for (let key of issueKeys) {
                 console.info(`Found key ${key}`);
-                const issue = yield getJiraIssues(key);
+                const issue = yield (0, jira_1.getJiraIssue)(key);
                 issues.push(issue);
                 if (requiresRCBApproval) {
                     const targetVersion = event.pull_request.base.ref.substring(rcbBranchPrefix.length);
@@ -149,6 +116,85 @@ function run() {
     });
 }
 run();
+
+
+/***/ }),
+
+/***/ 4438:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getJiraIssue = exports.getProjectKeys = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const node_fetch_1 = __importDefault(__nccwpck_require__(4429));
+const jiraApi = "https://dhis2.atlassian.net/rest/api/3";
+function fetchJira(path) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const uri = `${jiraApi}${path}`;
+            core.info(`Fetching ${uri}`);
+            const response = yield (0, node_fetch_1.default)(uri);
+            core.info(`[${response.status}] ${response.statusText}`);
+            const json = yield response.json();
+            core.info(`response: ${JSON.stringify(json, undefined, 2)}`);
+            return json;
+        }
+        catch (e) {
+            throw new Error(`Failed to fetch ${path} from Jira: ${e}`);
+        }
+    });
+}
+function getProjectKeys() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const projects = (yield fetchJira("/project/search?status=live"));
+        return projects.values.map((project) => project.key);
+    });
+}
+exports.getProjectKeys = getProjectKeys;
+function getJiraIssue(key) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const issue = yield fetchJira(`/issue/${key}?fields=labels`);
+        return issue;
+    });
+}
+exports.getJiraIssue = getJiraIssue;
 
 
 /***/ }),

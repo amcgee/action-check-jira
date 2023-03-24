@@ -1,40 +1,15 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import fetch from "node-fetch";
+
 import { PullRequestEvent } from "@octokit/webhooks-definitions/schema";
+import { getJiraIssue, getProjectKeys } from "./jira";
 
-import type { JiraIssue, JiraProject, JiraAPIPaginatedResponse } from './jiraApiTypes'
+import type { JiraIssue } from './jiraApiTypes'
 
-const jiraApi = "https://dhis2.atlassian.net/rest/api/3";
 const rcbBranchPrefix = "patch/";
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
 const event = github.context.payload as PullRequestEvent;
 const COMMENT_HEADER = "### DHIS2 Jira Links";
-
-async function fetchJira(path: String) {
-  try {
-    const uri = `${jiraApi}${path}`
-    core.info(`Fetching ${uri}`)
-    const response = await fetch(uri);
-    core.info(`[${response.status}] ${response.statusText}`)
-    const json = await response.json();
-    core.info(`response: ${JSON.stringify(json, undefined, 2)}`)
-    return json;
-  } catch (e) {
-    throw new Error(`Failed to fetch ${path} from Jira: ${e}`);
-  }
-}
-async function getProjectKeysRegex() {
-  const projects = <JiraAPIPaginatedResponse<JiraProject>>(
-    await fetchJira("/project/search?status=live")
-  );
-  const projectKeys = projects.values.map((project) => project.key);
-  return `(${projectKeys.join("|")})`;
-}
-async function getJiraIssues(key: string): Promise<JiraIssue> {
-  const issue = <JiraIssue>await fetchJira(`/issue/${key}?fields=labels`);
-  return issue;
-}
 
 function isIssueApproved(issue: JiraIssue, targetVersion: string): boolean {
   const rcbApprovalLabel = `APPROVED-${targetVersion}`;
@@ -91,10 +66,11 @@ async function run() {
     const requiresRCBApproval =
       event.pull_request.base.ref.startsWith(rcbBranchPrefix);
 
-    const projectKeysRegex = await getProjectKeysRegex();
-    let regex = new RegExp(`[${projectKeysRegex}-[0-9]+]`);
-    const issueKeys = regex.exec(prTitle);
-    if (!issueKeys?.length) {
+    const projectKeys = await getProjectKeys();
+
+    let regex = new RegExp(`[((?:${projectKeys.join('|')})-[0-9]+)]`);
+    const issueKeys = Array.from(prTitle.matchAll(regex), m => m[1]);
+    if (!issueKeys.length) {
       core.setFailed("Jira Issue Key missing in PR title.");
       return;
     }
@@ -103,7 +79,7 @@ async function run() {
     let missingApprovals = [];
     for (let key of issueKeys) {
       console.info(`Found key ${key}`);
-      const issue = await getJiraIssues(key);
+      const issue = await getJiraIssue(key);
       issues.push(issue);
 
       if (requiresRCBApproval) {
