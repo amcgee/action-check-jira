@@ -43,7 +43,7 @@ exports.createOrUpdateComment = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
-const COMMENT_HEADER = "### DHIS2 Jira Links";
+const COMMENT_HEADER = "### Linked JIRA issues\n_(this comment is auto-generated)_";
 const event = github.context.payload;
 function createOrUpdateComment(commentBody) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -120,11 +120,11 @@ function isIssueApproved(issue, targetVersion) {
     return issue.fields.labels.includes(rcbApprovalLabel);
 }
 const missingIssueKeyComment = `
-**A JIRA issue must be specified in the PR title**
+❌ **A JIRA issue must be specified in the PR title**
 
 Some hints:
 - Use the format \`[DHIS2-12345]\`
-- Multiple issues can be specified, i.e. \`[DHIS2-12345] [DHIS2-24680]\`
+- Multiple issues can be specified, i.e. \`[DHIS2-12345] [LIBS-24680]\`
 - In the **very rare case** where no Jira issue can be associated with this PR, use \`[NO JIRA]\`
 `;
 function generateSuccessComment(issues, missingApprovals) {
@@ -175,7 +175,7 @@ function run() {
             }
         }
         catch (error) {
-            (0, github_1.createOrUpdateComment)('An unknown error occured, check the Github Action logs');
+            (0, github_1.createOrUpdateComment)('❌ An unknown error occured, check the Github Action logs');
             core.error(error);
             core.setFailed("Failed to link Jira issues");
         }
