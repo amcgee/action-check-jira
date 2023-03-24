@@ -6,3 +6,9 @@ This action enforces the following GitHub-Jira linking rule:
 - When a PR targets a `patch/<version>` branch, the linked Jira issue(s) must have the label `APPROVED-<version>`
 
 It also creates a PR comment with convenient links to Jira and warnings about any violated rules.
+
+In the future we may also be able to:
+1. Automatically update state of Jira issue when PR is ready for review / testing / done :notes:
+2. Automatically set fix versions :muscle:
+3. Attempt to automate backport PR creation to all target versions or manually (by checking boxes) :boom:
+4. Ensure Jira component is set correctly :feet:
