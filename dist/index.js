@@ -124,9 +124,9 @@ const missingIssueKeyComment = `
 **A JIRA issue must be specified in the PR title**
 
 Some hints:
-- Use the format [DHIS2-12345]
-- Multiple issues can be specified, i.e. [DHIS2-12345][DHIS2-24680]
-- In the **very rare case** where no Jira issue can be associated with this PR, use [NO JIRA]
+- Use the format \`[DHIS2-12345]\`
+- Multiple issues can be specified, i.e. \`[DHIS2-12345] [DHIS2-24680]\`
+- In the **very rare case** where no Jira issue can be associated with this PR, use \`[NO JIRA]\`
 `;
 function generateSuccessComment(issues, missingApprovals) {
     return `
