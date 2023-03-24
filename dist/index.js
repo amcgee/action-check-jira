@@ -53,8 +53,12 @@ const COMMENT_HEADER = "### DHIS2 Jira Links";
 function fetchJira(path) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const response = yield (0, node_fetch_1.default)(`${jiraApi}${path}`);
+            const uri = `${jiraApi}${path}`;
+            core.info(`Fetching ${uri}`);
+            const response = yield (0, node_fetch_1.default)(uri);
+            core.info(`[${response.status}] ${response.statusText}`);
             const json = yield response.json();
+            core.info(`response: ${JSON.stringify(json, undefined, 2)}`);
             return json;
         }
         catch (e) {
@@ -139,7 +143,8 @@ function run() {
             }
         }
         catch (error) {
-            core.info(error);
+            core.error(error);
+            core.setFailed('Failed to link Jira issues');
         }
     });
 }
