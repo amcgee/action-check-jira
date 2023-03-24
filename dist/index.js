@@ -43,7 +43,7 @@ exports.createOrUpdateComment = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
-const COMMENT_HEADER = "### Linked JIRA issues\n_(this comment is auto-generated)_";
+const COMMENT_HEADER = "### Linked JIRA issues";
 const event = github.context.payload;
 function createOrUpdateComment(commentBody) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -115,6 +115,7 @@ const github_1 = __nccwpck_require__(5928);
 const jira_1 = __nccwpck_require__(4438);
 const rcbBranchPrefix = "patch/";
 const event = github.context.payload;
+const escapeHatch = '[NO JIRA]';
 function isIssueApproved(issue, targetVersion) {
     const rcbApprovalLabel = `APPROVED-${targetVersion}`;
     return issue.fields.labels.includes(rcbApprovalLabel);
@@ -125,7 +126,10 @@ const missingIssueKeyComment = `
 Some hints:
 - Use the format \`[DHIS2-12345]\`
 - Multiple issues can be specified, i.e. \`[DHIS2-12345] [LIBS-24680]\`
-- In the **very rare case** where no Jira issue can be associated with this PR, use \`[NO JIRA]\`
+- In the **very rare case** where no Jira issue can be associated with this PR, use \`${escapeHatch}\`
+`;
+const noJiraComment = `
+❓ **${escapeHatch}** Are you sure this PR shouldn't be linked to a Jira issue?
 `;
 function generateSuccessComment(issues, missingApprovals) {
     return `
@@ -141,12 +145,16 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const prTitle = event.pull_request.title;
-            const prBody = event.pull_request.body;
             const requiresRCBApproval = event.pull_request.base.ref.startsWith(rcbBranchPrefix);
             const projectKeys = yield (0, jira_1.getProjectKeys)();
             let regex = new RegExp(`\\[(${projectKeys.join("|")})-[0-9]+\\]`, "g");
             const issueKeys = Array.from(prTitle.matchAll(regex), (m) => m[0].substring(1, m[0].length - 1));
             if (!issueKeys.length) {
+                if (prTitle.indexOf(escapeHatch) !== -1) {
+                    (0, github_1.createOrUpdateComment)(noJiraComment);
+                    core.info(`Found escape hatch ${escapeHatch}`);
+                    return;
+                }
                 (0, github_1.createOrUpdateComment)(missingIssueKeyComment);
                 core.setFailed("Jira Issue Key missing in PR title.");
                 return;
