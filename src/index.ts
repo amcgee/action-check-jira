@@ -36,11 +36,11 @@ function generateSuccessComment(
   invalidIssuesText: string
 ) {
   return `${issues
-  .map(
-    (issue) => `
+    .map(
+      (issue) => `
 - [${issue.key}](${createJiraLink(issue.key)}) - ${issue.fields.summary}`
-  )
-  .join("\n")}
+    )
+    .join("\n")}
 ${invalidIssuesText}
 
 ${
@@ -69,7 +69,13 @@ async function run() {
     if (!issueKeys.length) {
       if (prTitle.indexOf(escapeHatch) !== -1) {
         if (requiresRCBApproval) {
-          createOrUpdateComment(`✋ The escape hatch ${escapeHatch} cannot be used when merging to an RCB-protected branch.`)
+          createOrUpdateComment(
+            `✋ The escape hatch \`${escapeHatch}\` cannot be used when merging to an RCB-protected branch.`
+          );
+          core.setFailed(
+            `Found escape hatch ${escapeHatch} but the current base branch is RCB-protected.`
+          );
+          return;
         }
         createOrUpdateComment(noJiraComment);
         core.info(`Found escape hatch ${escapeHatch}`);
@@ -123,7 +129,6 @@ async function run() {
         invalidIssuesText
       )
     );
-
 
     if (missingApprovals.length) {
       core.setFailed(

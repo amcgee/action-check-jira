@@ -23,7 +23,7 @@ export async function createOrUpdateComment(commentBody: string) {
 ${commentBody}
 
 ${COMMENT_FOOTER}
-`
+`;
   if (existingComment) {
     await octokit.rest.issues.updateComment({
       ...github.context.repo,

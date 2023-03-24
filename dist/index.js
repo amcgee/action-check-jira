@@ -159,7 +159,9 @@ function run() {
             if (!issueKeys.length) {
                 if (prTitle.indexOf(escapeHatch) !== -1) {
                     if (requiresRCBApproval) {
-                        (0, github_1.createOrUpdateComment)(`✋ The escape hatch ${escapeHatch} cannot be used when merging to an RCB-protected branch.`);
+                        (0, github_1.createOrUpdateComment)(`✋ The escape hatch \`${escapeHatch}\` cannot be used when merging to an RCB-protected branch.`);
+                        core.setFailed(`Found escape hatch ${escapeHatch} but the current base branch is RCB-protected.`);
+                        return;
                     }
                     (0, github_1.createOrUpdateComment)(noJiraComment);
                     core.info(`Found escape hatch ${escapeHatch}`);
@@ -283,7 +285,7 @@ function fetchJira(path) {
 }
 function getProjectKeys() {
     return __awaiter(this, void 0, void 0, function* () {
-        const projects = (yield fetchJira("/project/search?status=live"));
+        const projects = yield fetchJira("/project/search?status=live");
         return projects === null || projects === void 0 ? void 0 : projects.values.map((project) => project.key);
     });
 }
