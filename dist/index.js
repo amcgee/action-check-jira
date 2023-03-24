@@ -141,7 +141,7 @@ ${invalidIssuesText}
 ${missingApprovals.length
         ? `
 ---
-**RELEASE CONTROL BOARD APPROVAL REQUIRED**`
+🛑 **RELEASE CONTROL BOARD APPROVAL REQUIRED** 👮`
         : ""}`;
 }
 function run() {
