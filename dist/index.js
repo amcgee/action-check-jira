@@ -55,8 +55,7 @@ function createOrUpdateComment(commentBody) {
         });
         core.info(comments.data.toString());
         const existingComment = comments.data.find((comment) => { var _a; return (_a = comment.body) === null || _a === void 0 ? void 0 : _a.startsWith(COMMENT_HEADER); });
-        const body = `
-${COMMENT_HEADER}
+        const body = `${COMMENT_HEADER}
 ${commentBody}
 `;
         if (existingComment) {

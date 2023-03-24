@@ -18,8 +18,7 @@ export async function createOrUpdateComment(commentBody: string) {
   const existingComment = comments.data.find((comment) =>
     comment.body?.startsWith(COMMENT_HEADER)
   );
-  const body = `
-${COMMENT_HEADER}
+  const body = `${COMMENT_HEADER}
 ${commentBody}
 `
   if (existingComment) {
