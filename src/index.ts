@@ -4,7 +4,7 @@ import * as github from "@actions/github";
 import { PullRequestEvent } from "@octokit/webhooks-definitions/schema";
 import { getJiraIssue, getProjectKeys, createJiraLink } from "./jira";
 
-import type { JiraIssue } from './jiraTypes'
+import type { JiraIssue } from "./jiraTypes";
 
 const rcbBranchPrefix = "patch/";
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
@@ -26,7 +26,7 @@ async function createOrUpdateComment(
     repo: github.context.repo.repo,
     issue_number: event.pull_request.number,
   });
-  core.info(comments.data.toString())
+  core.info(comments.data.toString());
   const existingComment = comments.data.find((comment) =>
     comment.body?.startsWith(COMMENT_HEADER)
   );
@@ -51,12 +51,13 @@ ${
       comment_id: existingComment.id,
       body: commentBody,
     });
+  } else {
+    await octokit.rest.issues.createComment({
+      ...github.context.repo,
+      issue_number: event.pull_request.number,
+      body: commentBody,
+    });
   }
-  await octokit.rest.issues.createComment({
-    ...github.context.repo,
-    issue_number: event.pull_request.number,
-    body: commentBody,
-  });
 }
 
 async function run() {
@@ -69,8 +70,10 @@ async function run() {
 
     const projectKeys = await getProjectKeys();
 
-    let regex = new RegExp(`\\[(${projectKeys.join('|')})-[0-9]+\\]`, 'g');
-    const issueKeys = Array.from(prTitle.matchAll(regex), m => m[0].substring(1, m[0].length - 1));
+    let regex = new RegExp(`\\[(${projectKeys.join("|")})-[0-9]+\\]`, "g");
+    const issueKeys = Array.from(prTitle.matchAll(regex), (m) =>
+      m[0].substring(1, m[0].length - 1)
+    );
     if (!issueKeys.length) {
       core.setFailed("Jira Issue Key missing in PR title.");
       return;
@@ -110,9 +113,7 @@ async function run() {
     }
   } catch (error: any) {
     core.error(error);
-    core.setFailed(
-      'Failed to link Jira issues'
-    )
+    core.setFailed("Failed to link Jira issues");
   }
 }
 

@@ -71,7 +71,9 @@ ${missingApprovals.length
         if (existingComment) {
             yield octokit.rest.issues.updateComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, comment_id: existingComment.id, body: commentBody }));
         }
-        yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, body: commentBody }));
+        else {
+            yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, body: commentBody }));
+        }
     });
 }
 function run() {
@@ -81,8 +83,8 @@ function run() {
             const prBody = event.pull_request.body;
             const requiresRCBApproval = event.pull_request.base.ref.startsWith(rcbBranchPrefix);
             const projectKeys = yield (0, jira_1.getProjectKeys)();
-            let regex = new RegExp(`\\[(${projectKeys.join('|')})-[0-9]+\\]`, 'g');
-            const issueKeys = Array.from(prTitle.matchAll(regex), m => m[0].substring(1, m[0].length - 1));
+            let regex = new RegExp(`\\[(${projectKeys.join("|")})-[0-9]+\\]`, "g");
+            const issueKeys = Array.from(prTitle.matchAll(regex), (m) => m[0].substring(1, m[0].length - 1));
             if (!issueKeys.length) {
                 core.setFailed("Jira Issue Key missing in PR title.");
                 return;
@@ -112,7 +114,7 @@ function run() {
         }
         catch (error) {
             core.error(error);
-            core.setFailed('Failed to link Jira issues');
+            core.setFailed("Failed to link Jira issues");
         }
     });
 }
