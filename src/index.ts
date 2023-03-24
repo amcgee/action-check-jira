@@ -3,33 +3,13 @@ import * as github from "@actions/github";
 import fetch from "node-fetch";
 import { PullRequestEvent } from "@octokit/webhooks-definitions/schema";
 
+import type { JiraIssue, JiraProject, JiraAPIPaginatedResponse } from './jiraApiTypes'
+
 const jiraApi = "https://dhis2.atlassian.net/rest/api/3";
 const rcbBranchPrefix = "patch/";
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
 const event = github.context.payload as PullRequestEvent;
 const COMMENT_HEADER = "### DHIS2 Jira Links";
-
-interface JiraProject {
-  id: number;
-  self: string;
-  key: string;
-  name: string;
-  avatarUrls: {
-    "48x48": string;
-    "24x24": string;
-    "16x16": string;
-    "32x32": string;
-  };
-}
-interface JiraIssue {
-  id: number;
-  self: string;
-  key: string;
-  fields: {
-    labels: string[];
-    summary: string;
-  };
-}
 
 async function fetchJira(path: String) {
   try {
@@ -45,10 +25,10 @@ async function fetchJira(path: String) {
   }
 }
 async function getProjectKeysRegex() {
-  const projects = <JiraProject[]>(
+  const projects = <JiraAPIPaginatedResponse<JiraProject>>(
     await fetchJira("/project/search?status=live")
   );
-  const projectKeys = projects.map((project) => project.key);
+  const projectKeys = projects.values.map((project) => project.key);
   return `(${projectKeys.join("|")})`;
 }
 async function getJiraIssues(key: string): Promise<JiraIssue> {

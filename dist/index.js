@@ -69,7 +69,7 @@ function fetchJira(path) {
 function getProjectKeysRegex() {
     return __awaiter(this, void 0, void 0, function* () {
         const projects = (yield fetchJira("/project/search?status=live"));
-        const projectKeys = projects.map((project) => project.key);
+        const projectKeys = projects.values.map((project) => project.key);
         return `(${projectKeys.join("|")})`;
     });
 }
