@@ -6,6 +6,9 @@ on:
     - reopened
     - edited
     - synchronize
+  issue_comment:
+    types:
+    - edited
 
 permissions:
   contents: read
