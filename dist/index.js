@@ -1,6 +1,74 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 5928:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createOrUpdateComment = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
+const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
+const COMMENT_HEADER = "### DHIS2 Jira Links";
+const event = github.context.payload;
+function createOrUpdateComment(commentBody) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const octokit = github.getOctokit(GITHUB_TOKEN);
+        const comments = yield octokit.rest.issues.listComments({
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            issue_number: event.pull_request.number,
+        });
+        core.info(comments.data.toString());
+        const existingComment = comments.data.find((comment) => { var _a; return (_a = comment.body) === null || _a === void 0 ? void 0 : _a.startsWith(COMMENT_HEADER); });
+        if (existingComment) {
+            yield octokit.rest.issues.updateComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, comment_id: existingComment.id, body: commentBody }));
+        }
+        else {
+            yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, body: `${COMMENT_HEADER}
+${commentBody}` }));
+        }
+    });
+}
+exports.createOrUpdateComment = createOrUpdateComment;
+
+
+/***/ }),
+
 /***/ 4822:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -41,40 +109,31 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
+const github_1 = __nccwpck_require__(5928);
 const jira_1 = __nccwpck_require__(4438);
 const rcbBranchPrefix = "patch/";
-const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
 const event = github.context.payload;
-const COMMENT_HEADER = "### DHIS2 Jira Links";
 function isIssueApproved(issue, targetVersion) {
     const rcbApprovalLabel = `APPROVED-${targetVersion}`;
     return issue.fields.labels.includes(rcbApprovalLabel);
 }
-function createOrUpdateComment(issues, missingApprovals) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const octokit = github.getOctokit(GITHUB_TOKEN);
-        const comments = yield octokit.rest.issues.listComments({
-            owner: github.context.repo.owner,
-            repo: github.context.repo.repo,
-            issue_number: event.pull_request.number,
-        });
-        core.info(comments.data.toString());
-        const existingComment = comments.data.find((comment) => { var _a; return (_a = comment.body) === null || _a === void 0 ? void 0 : _a.startsWith(COMMENT_HEADER); });
-        const commentBody = `${COMMENT_HEADER}
+const missingIssueKeyComment = `
+**A JIRA issue must be specified in the PR title**
+
+Some hints:
+- Use the format [DHIS2-12345]
+- Multiple issues can be specified, i.e. [DHIS2-12345][DHIS2-24680]
+- In the **very rare case** where no Jira issue can be associated with this PR, use [NO JIRA]
+`;
+function generateSuccessComment(issues, missingApprovals) {
+    return `
 ${issues.map((issue) => `
 - [${issue.key}](${(0, jira_1.createJiraLink)(issue.key)}) - ${issue.fields.summary}`)}
 ${missingApprovals.length
-            ? `
+        ? `
 ---
 **RELEASE CONTROL BOARD APPROVAL REQUIRED**`
-            : ""}`;
-        if (existingComment) {
-            yield octokit.rest.issues.updateComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, comment_id: existingComment.id, body: commentBody }));
-        }
-        else {
-            yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, github.context.repo), { issue_number: event.pull_request.number, body: commentBody }));
-        }
-    });
+        : ""}`;
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -86,6 +145,7 @@ function run() {
             let regex = new RegExp(`\\[(${projectKeys.join("|")})-[0-9]+\\]`, "g");
             const issueKeys = Array.from(prTitle.matchAll(regex), (m) => m[0].substring(1, m[0].length - 1));
             if (!issueKeys.length) {
+                (0, github_1.createOrUpdateComment)(missingIssueKeyComment);
                 core.setFailed("Jira Issue Key missing in PR title.");
                 return;
             }
@@ -102,7 +162,7 @@ function run() {
                     }
                 }
             }
-            createOrUpdateComment(issues, missingApprovals);
+            (0, github_1.createOrUpdateComment)(generateSuccessComment(issues, missingApprovals));
             if (missingApprovals.length === 1) {
                 core.setFailed(`Issue ${missingApprovals[0]} has not been approved by the Release Control Board`);
                 return;
@@ -113,6 +173,7 @@ function run() {
             }
         }
         catch (error) {
+            (0, github_1.createOrUpdateComment)('An unknown error occured, check the Github Action logs');
             core.error(error);
             core.setFailed("Failed to link Jira issues");
         }
