@@ -68,8 +68,8 @@ async function run() {
 
     const projectKeys = await getProjectKeys();
 
-    let regex = new RegExp(`\[((${projectKeys.join('|')})-[0-9]+)\]`);
-    const issueKeys = Array.from(prTitle.matchAll(regex), m => m[1]);
+    let regex = new RegExp(`\[(${projectKeys.join('|')})-[0-9]+\]`);
+    const issueKeys = Array.from(prTitle.matchAll(regex), m => m[0].substring(1, m[0].length - 1));
     if (!issueKeys.length) {
       core.setFailed("Jira Issue Key missing in PR title.");
       return;
