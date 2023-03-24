@@ -1,4 +1,4 @@
-name: Link DHIS2 Jira issues
+name: DHIS2 Jira  Automation
 on:
   pull_request:
     types: 
@@ -6,9 +6,6 @@ on:
     - reopened
     - edited
     - synchronize
-  issue_comment:
-    types:
-    - edited
 
 permissions:
   contents: read
@@ -16,6 +13,7 @@ permissions:
 
 jobs:
   check:
+    name: Link Jira issues
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

@@ -44,7 +44,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
 const COMMENT_HEADER = "## Linked JIRA issues";
-const COMMENT_FOOTER = "- [ ] Check to refresh";
+const COMMENT_FOOTER = "_Edit the PR description or title to refresh_";
 const event = github.context.payload;
 function createOrUpdateComment(commentBody) {
     return __awaiter(this, void 0, void 0, function* () {

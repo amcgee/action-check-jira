@@ -4,7 +4,7 @@ import { PullRequestEvent } from "@octokit/webhooks-definitions/schema";
 
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
 const COMMENT_HEADER = "## Linked JIRA issues";
-const COMMENT_FOOTER = "- [ ] Check to refresh";
+const COMMENT_FOOTER = "_Edit the PR description or title to refresh_";
 
 const event = github.context.payload as PullRequestEvent;
 
