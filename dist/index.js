@@ -135,7 +135,9 @@ function generateSuccessComment(issues, missingApprovals, invalidIssuesText) {
     return `
 ${issues.map((issue) => `
 - [${issue.key}](${(0, jira_1.createJiraLink)(issue.key)}) - ${issue.fields.summary}`)}
+
 ${invalidIssuesText}
+
 ${missingApprovals.length
         ? `
 ---

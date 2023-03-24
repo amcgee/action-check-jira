@@ -36,7 +36,9 @@ ${issues.map(
   (issue) => `
 - [${issue.key}](${createJiraLink(issue.key)}) - ${issue.fields.summary}`
 )}
+
 ${invalidIssuesText}
+
 ${
   missingApprovals.length
     ? `
