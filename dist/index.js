@@ -58,6 +58,7 @@ function createOrUpdateComment(commentBody) {
         const existingComment = comments.data.find((comment) => { var _a; return (_a = comment.body) === null || _a === void 0 ? void 0 : _a.startsWith(COMMENT_HEADER); });
         const body = `${COMMENT_HEADER}
 ${commentBody}
+
 ${COMMENT_FOOTER}
 `;
         if (existingComment) {
@@ -157,6 +158,11 @@ function run() {
             const issueKeys = Array.from(prTitle.matchAll(regex), (m) => m[0].substring(1, m[0].length - 1));
             if (!issueKeys.length) {
                 if (prTitle.indexOf(escapeHatch) !== -1) {
+                    if (requiresRCBApproval) {
+                        (0, github_1.createOrUpdateComment)(`✋ The escape hatch \`${escapeHatch}\` cannot be used when merging to an RCB-protected branch.`);
+                        core.setFailed(`Found escape hatch ${escapeHatch} but the current base branch is RCB-protected.`);
+                        return;
+                    }
                     (0, github_1.createOrUpdateComment)(noJiraComment);
                     core.info(`Found escape hatch ${escapeHatch}`);
                     return;
@@ -195,17 +201,13 @@ function run() {
                 }
             }
             (0, github_1.createOrUpdateComment)(generateSuccessComment(issues, requiresRCBApproval, missingApprovals, invalidIssuesText));
-            if (missingApprovals.length === 1) {
-                core.setFailed(`Issue ${missingApprovals[0]} has not been approved by the Release Control Board`);
-                return;
-            }
-            else if (missingApprovals.length) {
-                core.setFailed(`Issue ${missingApprovals.join(", ")} has not been approved by the Release Control Board`);
+            if (missingApprovals.length) {
+                core.setFailed(`Some linked issues (${missingApprovals.join(", ")}) have not been approved by the Release Control Board`);
                 return;
             }
         }
         catch (error) {
-            (0, github_1.createOrUpdateComment)("❌ An unknown error occured, check the Github Action logs");
+            (0, github_1.createOrUpdateComment)("💣 An unknown error occured, check the Github Action logs");
             core.error(error);
             core.setFailed("Failed to link Jira issues");
         }
@@ -283,7 +285,7 @@ function fetchJira(path) {
 }
 function getProjectKeys() {
     return __awaiter(this, void 0, void 0, function* () {
-        const projects = (yield fetchJira("/project/search?status=live"));
+        const projects = yield fetchJira("/project/search?status=live");
         return projects === null || projects === void 0 ? void 0 : projects.values.map((project) => project.key);
     });
 }

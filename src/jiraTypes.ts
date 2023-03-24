@@ -21,10 +21,10 @@ export interface JiraIssue {
 }
 
 export interface JiraAPIPaginatedResponse<T> {
-    self: string;
-    maxResults: number
-    startAt: number
-    total: number
-    isLast: boolean
-    values: T[]
+  self: string;
+  maxResults: number;
+  startAt: number;
+  total: number;
+  isLast: boolean;
+  values: T[];
 }

@@ -21,8 +21,9 @@ export async function createOrUpdateComment(commentBody: string) {
   );
   const body = `${COMMENT_HEADER}
 ${commentBody}
+
 ${COMMENT_FOOTER}
-`
+`;
   if (existingComment) {
     await octokit.rest.issues.updateComment({
       ...github.context.repo,
