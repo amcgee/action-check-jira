@@ -133,16 +133,13 @@ const noJiraComment = `
 `;
 function generateSuccessComment(issues, missingApprovals, invalidIssuesText) {
     return `
-${issues.map((issue) => `
-- [${issue.key}](${(0, jira_1.createJiraLink)(issue.key)}) - ${issue.fields.summary}`)}
-
-${invalidIssuesText}
-
 ${missingApprovals.length
-        ? `
----
-🛑 **RELEASE CONTROL BOARD APPROVAL REQUIRED** 👮`
-        : ""}`;
+        ? `### 🛑 **RELEASE CONTROL BOARD APPROVAL REQUIRED** 👮`
+        : ""}
+${issues.map((issue) => `
+- [${issue.key}](${(0, jira_1.createJiraLink)(issue.key)}) - ${issue.fields.summary}`).join('\n')}
+${invalidIssuesText}
+`;
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -181,7 +178,7 @@ function run() {
                     invalidIssues.push(key);
                 }
             }
-            const invalidIssuesText = invalidIssues.map(key => `❓ Issue key \`${key}\` appears to be invalid`).join('\n\n');
+            const invalidIssuesText = invalidIssues.map(key => `- ❓ Issue key \`${key}\` appears to be invalid`).join('\n');
             if (invalidIssues.length) {
                 if (!issues.length) {
                     (0, github_1.createOrUpdateComment)(`${missingIssueKeyComment}\n\n${invalidIssuesText}`);

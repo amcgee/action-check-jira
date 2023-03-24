@@ -32,20 +32,17 @@ const noJiraComment = `
 
 function generateSuccessComment(issues: JiraIssue[], missingApprovals: string[], invalidIssuesText: string) {
   return `
+${
+  missingApprovals.length
+    ? `### 🛑 **RELEASE CONTROL BOARD APPROVAL REQUIRED** 👮`
+    : ""
+}
 ${issues.map(
   (issue) => `
 - [${issue.key}](${createJiraLink(issue.key)}) - ${issue.fields.summary}`
-)}
-
+).join('\n')}
 ${invalidIssuesText}
-
-${
-  missingApprovals.length
-    ? `
----
-🛑 **RELEASE CONTROL BOARD APPROVAL REQUIRED** 👮`
-    : ""
-}`;
+`
 }
 
 async function run() {
@@ -94,7 +91,7 @@ async function run() {
       }
     }
 
-    const invalidIssuesText = invalidIssues.map(key => `❓ Issue key \`${key}\` appears to be invalid`).join('\n\n')
+    const invalidIssuesText = invalidIssues.map(key => `- ❓ Issue key \`${key}\` appears to be invalid`).join('\n')
     if (invalidIssues.length) {
       if (!issues.length) {
         createOrUpdateComment(`${missingIssueKeyComment}\n\n${invalidIssuesText}`);
