@@ -3,7 +3,7 @@ import * as github from "@actions/github";
 import { PullRequestEvent } from "@octokit/webhooks-definitions/schema";
 
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
-const COMMENT_HEADER = "### Linked JIRA issues\n_(this comment is auto-generated)_";
+const COMMENT_HEADER = "### Linked JIRA issues";
 
 const event = github.context.payload as PullRequestEvent;
 

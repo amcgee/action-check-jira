@@ -30,12 +30,13 @@ const noJiraComment = `
 ❓ **${escapeHatch}** Are you sure this PR shouldn't be linked to a Jira issue?
 `
 
-function generateSuccessComment(issues: JiraIssue[], missingApprovals: string[]) {
+function generateSuccessComment(issues: JiraIssue[], missingApprovals: string[], invalidIssuesText: string) {
   return `
 ${issues.map(
   (issue) => `
 - [${issue.key}](${createJiraLink(issue.key)}) - ${issue.fields.summary}`
 )}
+${invalidIssuesText}
 ${
   missingApprovals.length
     ? `
@@ -54,7 +55,7 @@ async function run() {
 
     const projectKeys = await getProjectKeys();
 
-    let regex = new RegExp(`\\[(${projectKeys.join("|")})-[0-9]+\\]`, "g");
+    let regex = new RegExp(`\\[(${projectKeys?.join("|")})-[0-9]+\\]`, "g");
     const issueKeys = Array.from(prTitle.matchAll(regex), (m) =>
       m[0].substring(1, m[0].length - 1)
     );
@@ -69,12 +70,14 @@ async function run() {
       return;
     }
 
-    let issues = [];
-    let missingApprovals = [];
+    const issues = [];
+    const invalidIssues = [];
+    const missingApprovals = [];
     for (let key of issueKeys) {
       console.info(`Found key ${key}`);
       const issue = await getJiraIssue(key);
-      issues.push(issue);
+      if (issue) {
+        issues.push(issue);
 
       if (requiresRCBApproval) {
         const targetVersion = event.pull_request.base.ref.substring(
@@ -84,9 +87,21 @@ async function run() {
           missingApprovals.push(key);
         }
       }
+      } else {
+        invalidIssues.push(key)
+      }
     }
 
-    createOrUpdateComment(generateSuccessComment(issues, missingApprovals));
+    const invalidIssuesText = invalidIssues.map(key => `❓ Issue key \`${key}\` appears to be invalid`).join('\n\n')
+    if (invalidIssues.length) {
+      if (!issues.length) {
+        createOrUpdateComment(`${missingIssueKeyComment}\n\n${invalidIssuesText}`);
+        core.setFailed("No valid Jira issue keys found in PR title.");
+        return
+      }
+    }
+
+    createOrUpdateComment(generateSuccessComment(issues, missingApprovals, invalidIssuesText));
 
     if (missingApprovals.length === 1) {
       core.setFailed(

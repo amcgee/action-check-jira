@@ -131,10 +131,11 @@ Some hints:
 const noJiraComment = `
 ❓ **${escapeHatch}** Are you sure this PR shouldn't be linked to a Jira issue?
 `;
-function generateSuccessComment(issues, missingApprovals) {
+function generateSuccessComment(issues, missingApprovals, invalidIssuesText) {
     return `
 ${issues.map((issue) => `
 - [${issue.key}](${(0, jira_1.createJiraLink)(issue.key)}) - ${issue.fields.summary}`)}
+${invalidIssuesText}
 ${missingApprovals.length
         ? `
 ---
@@ -147,7 +148,7 @@ function run() {
             const prTitle = event.pull_request.title;
             const requiresRCBApproval = event.pull_request.base.ref.startsWith(rcbBranchPrefix);
             const projectKeys = yield (0, jira_1.getProjectKeys)();
-            let regex = new RegExp(`\\[(${projectKeys.join("|")})-[0-9]+\\]`, "g");
+            let regex = new RegExp(`\\[(${projectKeys === null || projectKeys === void 0 ? void 0 : projectKeys.join("|")})-[0-9]+\\]`, "g");
             const issueKeys = Array.from(prTitle.matchAll(regex), (m) => m[0].substring(1, m[0].length - 1));
             if (!issueKeys.length) {
                 if (prTitle.indexOf(escapeHatch) !== -1) {
@@ -159,20 +160,34 @@ function run() {
                 core.setFailed("Jira Issue Key missing in PR title.");
                 return;
             }
-            let issues = [];
-            let missingApprovals = [];
+            const issues = [];
+            const invalidIssues = [];
+            const missingApprovals = [];
             for (let key of issueKeys) {
                 console.info(`Found key ${key}`);
                 const issue = yield (0, jira_1.getJiraIssue)(key);
-                issues.push(issue);
-                if (requiresRCBApproval) {
-                    const targetVersion = event.pull_request.base.ref.substring(rcbBranchPrefix.length);
-                    if (!isIssueApproved(issue, targetVersion)) {
-                        missingApprovals.push(key);
+                if (issue) {
+                    issues.push(issue);
+                    if (requiresRCBApproval) {
+                        const targetVersion = event.pull_request.base.ref.substring(rcbBranchPrefix.length);
+                        if (!isIssueApproved(issue, targetVersion)) {
+                            missingApprovals.push(key);
+                        }
                     }
                 }
+                else {
+                    invalidIssues.push(key);
+                }
             }
-            (0, github_1.createOrUpdateComment)(generateSuccessComment(issues, missingApprovals));
+            const invalidIssuesText = invalidIssues.map(key => `❓ Issue key \`${key}\` appears to be invalid`).join('\n\n');
+            if (invalidIssues.length) {
+                if (!issues.length) {
+                    (0, github_1.createOrUpdateComment)(`${missingIssueKeyComment}\n\n${invalidIssuesText}`);
+                    core.setFailed("No valid Jira issue keys found in PR title.");
+                    return;
+                }
+            }
+            (0, github_1.createOrUpdateComment)(generateSuccessComment(issues, missingApprovals, invalidIssuesText));
             if (missingApprovals.length === 1) {
                 core.setFailed(`Issue ${missingApprovals[0]} has not been approved by the Release Control Board`);
                 return;
@@ -247,6 +262,9 @@ function fetchJira(path) {
             core.info(`Fetching ${uri}`);
             const response = yield (0, node_fetch_1.default)(uri);
             core.info(`[${response.status}] ${response.statusText}`);
+            if (response.status === 404) {
+                return null;
+            }
             const json = yield response.json();
             core.info(`response: ${JSON.stringify(json, undefined, 2)}`);
             return json;
@@ -259,7 +277,7 @@ function fetchJira(path) {
 function getProjectKeys() {
     return __awaiter(this, void 0, void 0, function* () {
         const projects = (yield fetchJira("/project/search?status=live"));
-        return projects.values.map((project) => project.key);
+        return projects === null || projects === void 0 ? void 0 : projects.values.map((project) => project.key);
     });
 }
 exports.getProjectKeys = getProjectKeys;

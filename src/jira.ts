@@ -10,13 +10,16 @@ import {
 const jiraBase = "https://dhis2.atlassian.net"
 const jiraApi = `${jiraBase}/rest/api/3`;
 
-async function fetchJira(path: String) {
+async function fetchJira<T>(path: String): Promise<T | null> {
   try {
     const uri = `${jiraApi}${path}`;
     core.info(`Fetching ${uri}`);
     const response = await fetch(uri);
     core.info(`[${response.status}] ${response.statusText}`);
-    const json = await response.json();
+    if (response.status === 404) {
+      return null
+    }
+    const json = <T> await response.json();
     core.info(`response: ${JSON.stringify(json, undefined, 2)}`);
     return json;
   } catch (e) {
@@ -25,13 +28,13 @@ async function fetchJira(path: String) {
 }
 
 export async function getProjectKeys() {
-  const projects = <JiraAPIPaginatedResponse<JiraProject>>(
-    await fetchJira("/project/search?status=live")
+  const projects = (
+    await fetchJira<JiraAPIPaginatedResponse<JiraProject>>("/project/search?status=live")
   );
-  return projects.values.map((project) => project.key);
+  return projects?.values.map((project) => project.key);
 }
-export async function getJiraIssue(key: string): Promise<JiraIssue> {
-  const issue = <JiraIssue>await fetchJira(`/issue/${key}?fields=labels,summary`);
+export async function getJiraIssue(key: string) {
+  const issue = await fetchJira<JiraIssue>(`/issue/${key}?fields=labels,summary`);
   return issue;
 }
 
