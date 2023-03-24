@@ -1,0 +1,9 @@
+name: use my action
+on: pull_request
+jobs:
+  my_first_job:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: My first step
+      uses: ./
