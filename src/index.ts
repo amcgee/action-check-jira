@@ -68,6 +68,9 @@ async function run() {
     );
     if (!issueKeys.length) {
       if (prTitle.indexOf(escapeHatch) !== -1) {
+        if (requiresRCBApproval) {
+          createOrUpdateComment(`✋ The escape hatch ${escapeHatch} cannot be used when merging to an RCB-protected branch.`)
+        }
         createOrUpdateComment(noJiraComment);
         core.info(`Found escape hatch ${escapeHatch}`);
         return;
@@ -121,22 +124,18 @@ async function run() {
       )
     );
 
-    if (missingApprovals.length === 1) {
+
+    if (missingApprovals.length) {
       core.setFailed(
-        `Issue ${missingApprovals[0]} has not been approved by the Release Control Board`
-      );
-      return;
-    } else if (missingApprovals.length) {
-      core.setFailed(
-        `Issue ${missingApprovals.join(
+        `Some linked issues (${missingApprovals.join(
           ", "
-        )} has not been approved by the Release Control Board`
+        )}) have not been approved by the Release Control Board`
       );
       return;
     }
   } catch (error: any) {
     createOrUpdateComment(
-      "❌ An unknown error occured, check the Github Action logs"
+      "💣 An unknown error occured, check the Github Action logs"
     );
     core.error(error);
     core.setFailed("Failed to link Jira issues");

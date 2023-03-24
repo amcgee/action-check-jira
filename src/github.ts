@@ -21,6 +21,7 @@ export async function createOrUpdateComment(commentBody: string) {
   );
   const body = `${COMMENT_HEADER}
 ${commentBody}
+
 ${COMMENT_FOOTER}
 `
   if (existingComment) {
