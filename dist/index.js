@@ -53,13 +53,13 @@ function isIssueApproved(issue, targetVersion) {
 function createOrUpdateComment(issues, missingApprovals) {
     return __awaiter(this, void 0, void 0, function* () {
         const octokit = github.getOctokit(GITHUB_TOKEN);
-        const comments = yield octokit.rest.pulls.listReviewComments({
+        const comments = yield octokit.rest.issues.listComments({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
-            pull_number: event.pull_request.number,
+            issue_number: event.pull_request.number,
         });
         core.info(comments.data.toString());
-        const existingComment = comments.data.find((comment) => comment.body.startsWith(COMMENT_HEADER));
+        const existingComment = comments.data.find((comment) => { var _a; return (_a = comment.body) === null || _a === void 0 ? void 0 : _a.startsWith(COMMENT_HEADER); });
         const commentBody = `${COMMENT_HEADER}
 ${issues.map((issue) => `
 - [${issue.key}](${(0, jira_1.createJiraLink)(issue.key)}) - ${issue.fields.summary}`)}

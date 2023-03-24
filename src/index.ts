@@ -21,14 +21,14 @@ async function createOrUpdateComment(
   missingApprovals: string[]
 ) {
   const octokit = github.getOctokit(GITHUB_TOKEN);
-  const comments = await octokit.rest.pulls.listReviewComments({
+  const comments = await octokit.rest.issues.listComments({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
-    pull_number: event.pull_request.number,
+    issue_number: event.pull_request.number,
   });
   core.info(comments.data.toString())
   const existingComment = comments.data.find((comment) =>
-    comment.body.startsWith(COMMENT_HEADER)
+    comment.body?.startsWith(COMMENT_HEADER)
   );
 
   const commentBody = `${COMMENT_HEADER}
