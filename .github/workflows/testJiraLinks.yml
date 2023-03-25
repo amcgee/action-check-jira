@@ -7,10 +7,6 @@ on:
     - edited
     - synchronize
 
-permissions:
-  contents: read
-  pull-requests: write
-
 jobs:
   check:
     name: Link Jira issues
